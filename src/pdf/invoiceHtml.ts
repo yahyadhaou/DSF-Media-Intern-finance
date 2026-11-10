@@ -42,7 +42,8 @@ const META_ROW_HEIGHT = 12.9;
 const HEADER_HEIGHT = 57.65;
 const ADDRESS_COLUMN_HEIGHT = 66.55;
 const OWNER_HEIGHT = 61.6;
-const TILES_HEIGHT = 47.55;
+/** All tiles share one height that fits a two-line label (e.g. „GF-KABEL / VERLEGT“) plus the figure. */
+const TILES_HEIGHT = 11.3 + 45;
 
 const CSS = `
 body{font-size:9.5px;color:${C.ink}}
@@ -53,9 +54,9 @@ body{font-size:9.5px;color:${C.ink}}
 .brand{font-weight:700;font-size:20px;color:${C.navy};margin-left:9px}
 .brand span{color:${C.tealDark}}
 .tagline{font-size:6.5px;letter-spacing:1.2px;color:${C.muted};margin-top:5px}
-.title{font-weight:700;font-size:22px;color:${C.navy};text-align:right;letter-spacing:.6px}
-.metaStrong{font-weight:700;font-size:10px;text-align:right;margin-top:4px}
-.metaMuted{font-size:9.5px;color:${C.muted};text-align:right}
+.title{font-weight:700;font-size:22px;color:${C.navy};letter-spacing:.6px}
+.metaStrong{font-weight:700;font-size:10px;margin-top:4px}
+.metaMuted{font-size:9.5px;color:${C.muted}}
 .addressRow{display:flex;justify-content:space-between;margin-top:20px}
 .addressCol{flex:1;margin-right:21px}
 .senderLine{font-size:6.5px;color:${C.muted};border-bottom:.6px solid #CBD5E1;padding-bottom:2px;margin-bottom:6px}
@@ -69,10 +70,10 @@ body{font-size:9.5px;color:${C.ink}}
 .metaValue{font-weight:700}
 .ownerRow{margin-top:15px;padding-top:9px;border-top:.6px solid ${C.line};height:46.6px}
 .ownerKind{font-weight:400;color:${C.muted}}
-.tiles{display:flex;margin-top:11.3px;height:36.25px}
+.tiles{display:flex;margin-top:11.3px;height:45px}
 .tile{flex:1;background:${C.panel};border-top:2px solid ${C.teal};padding:5px 7px 6px;margin-right:6px}
 .tile:last-child{margin-right:0}
-.tileLabel{font-weight:700;font-size:6.5px;color:${C.muted};letter-spacing:.4px}
+.tileLabel{font-weight:700;font-size:6.5px;color:${C.muted};letter-spacing:.4px;height:14.3px;overflow:hidden}
 .tileValue{font-weight:700;font-size:14px;color:${C.navy};margin-top:2px}
 .tileUnit{font-weight:400;font-size:8.5px;color:${C.muted}}
 .sectionTitle{margin-top:${BLOCK_GAP}px;font-weight:700;font-size:7px;letter-spacing:1px;color:${C.tealDark};margin-bottom:4px;height:7.7px}

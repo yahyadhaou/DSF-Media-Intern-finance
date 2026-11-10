@@ -37,7 +37,8 @@ html,body{background:#E6ECF2}
 export function documentHtml(options: { title: string; css: string; pages: string[]; mode: RenderMode }): string {
   const { title, css, pages, mode } = options;
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${esc(title)}</title>`
-    + `<meta name="viewport" content="width=${PAGE_WIDTH}, initial-scale=1, user-scalable=no">`
+    // Preview: the 595 px page is fitted to the screen (phone or tablet) and can be pinch-zoomed.
+    + `<meta name="viewport" content="${mode === 'preview' ? `width=${PAGE_WIDTH}, user-scalable=yes` : `width=${PAGE_WIDTH}, initial-scale=1, user-scalable=no`}">`
     + `<style>${BASE_CSS}${mode === 'preview' ? PREVIEW_CSS : ''}${css}</style></head><body>`
     + pages.map((page) => `<section class="page">${page}</section>`).join('')
     + '</body></html>';

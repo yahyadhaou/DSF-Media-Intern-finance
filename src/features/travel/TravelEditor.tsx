@@ -123,7 +123,7 @@ export function TravelEditor({ initial }: { initial: TravelStatement }) {
   const finalize = async () => {
     const ok = await confirm({
       title: 'Abrechnung abschließen?',
-      message: 'Danach kann sie nicht mehr geändert werden. Du kannst sie aber jederzeit als PDF teilen.',
+      message: 'Sie wird gesperrt und bleibt auf dem Gerät gespeichert. Über „Bearbeiten“ kannst du sie später wieder ändern.',
       confirmLabel: 'Abschließen',
     });
     if (!ok) return;

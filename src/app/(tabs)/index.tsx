@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useInvoiceActions, useInvoices } from '../../data/hooks';
 import { computeTotals } from '../../domain/calc';
 import { formatPeriod } from '../../domain/dates';
@@ -17,6 +17,8 @@ type Filter = 'all' | 'draft' | 'issued';
 function InvoiceCard({ invoice, onDelete }: { invoice: Invoice; onDelete: () => void }) {
   const totals = computeTotals(invoice);
   const draft = invoice.status === 'draft';
+  /** Reopened for a correction: has a number, may not be deleted. */
+  const correcting = draft && !!invoice.number;
   const who = [invoice.client.name, invoice.owner.name].filter(Boolean).join(' · ');
   const period = formatPeriod(invoice.executionFrom, invoice.executionTo);
   return (
@@ -25,7 +27,7 @@ function InvoiceCard({ invoice, onDelete }: { invoice: Invoice; onDelete: () => 
         <View style={{ flex: 1, gap: 6 }}>
           <View style={styles.cardTop}>
             <Text style={styles.number}>{invoice.number ?? 'Entwurf'}</Text>
-            <Badge label={draft ? 'Entwurf' : 'Ausgestellt'} tone={draft ? 'warning' : 'success'} icon={draft ? 'create-outline' : 'checkmark-circle'} />
+            <Badge label={correcting ? 'In Korrektur' : draft ? 'Entwurf' : 'Ausgestellt'} tone={draft ? 'warning' : 'success'} icon={draft ? 'create-outline' : 'checkmark-circle'} />
           </View>
           <Text style={font.body} numberOfLines={1}>
             {who || 'Noch kein Auftraggeber'}
@@ -36,7 +38,7 @@ function InvoiceCard({ invoice, onDelete }: { invoice: Invoice; onDelete: () => 
         </View>
         <View style={styles.right}>
           <Text style={styles.amount}>{formatEuro(totals.gross)}</Text>
-          {draft ? <IconButton icon="trash-outline" label="Entwurf löschen" color={colors.danger} onPress={onDelete} /> : null}
+          {draft && !correcting ? <IconButton icon="trash-outline" label="Entwurf löschen" color={colors.danger} onPress={onDelete} /> : null}
         </View>
       </Card>
     </Pressable>
@@ -47,6 +49,8 @@ export default function InvoicesScreen() {
   const { data, isLoading } = useInvoices();
   const { remove } = useInvoiceActions();
   const [filter, setFilter] = useState<Filter>('all');
+  // Tablets: two cards side by side.
+  const columns = useWindowDimensions().width >= 720 ? 2 : 1;
 
   const visible = useMemo(() => (data ?? []).filter((invoice) => filter === 'all' || invoice.status === filter), [data, filter]);
 
@@ -73,10 +77,17 @@ export default function InvoicesScreen() {
         <ActivityIndicator style={{ marginTop: 48 }} color={colors.tealDark} />
       ) : (
         <FlatList
+          key={columns}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.row : undefined}
           data={visible}
           keyExtractor={(invoice) => invoice.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => <InvoiceCard invoice={item} onDelete={() => void askDelete(item)} />}
+          renderItem={({ item }) => (
+            <View style={[styles.cell, columns > 1 && styles.half]}>
+              <InvoiceCard invoice={item} onDelete={() => void askDelete(item)} />
+            </View>
+          )}
           ListEmptyComponent={
             <EmptyState
               icon="document-text-outline"
@@ -95,6 +106,10 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   filters: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.sm },
   list: { padding: space.lg, paddingTop: space.sm, gap: space.md, paddingBottom: 110 },
+  row: { gap: space.md },
+  cell: { flex: 1 },
+  // Keeps a single card in the last row at half width.
+  half: { maxWidth: '49%' },
   card: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
   number: { ...font.h3, fontSize: 17 },

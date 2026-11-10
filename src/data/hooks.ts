@@ -47,6 +47,7 @@ export function useInvoiceActions() {
     save: (invoice: Invoice) => repo.invoices.save(invoice).then((saved) => (client.setQueryData(keys.invoice(saved.id), saved), saved)),
     remove: useMutation({ mutationFn: (id: string) => repo.invoices.delete(id), onSuccess: refresh }).mutateAsync,
     issue: useMutation({ mutationFn: (id: string) => repo.invoices.issue(id), onSuccess: refresh }).mutateAsync,
+    reopen: useMutation({ mutationFn: (id: string) => repo.invoices.reopen(id), onSuccess: refresh }).mutateAsync,
     refresh,
   };
 }
@@ -76,6 +77,7 @@ export function useTravelActions() {
       repo.travel.save(statement).then((saved) => (client.setQueryData(keys.travelOne(saved.id), saved), saved)),
     remove: useMutation({ mutationFn: (id: string) => repo.travel.delete(id), onSuccess: refresh }).mutateAsync,
     finalize: useMutation({ mutationFn: (id: string) => repo.travel.finalize(id), onSuccess: refresh }).mutateAsync,
+    reopen: useMutation({ mutationFn: (id: string) => repo.travel.reopen(id), onSuccess: refresh }).mutateAsync,
     refresh,
   };
 }

@@ -8,7 +8,7 @@ import { duplicateAsDraft } from '../../domain/factory';
 import { formatEuro } from '../../domain/money';
 import type { Invoice } from '../../domain/types';
 import { Button } from '../../ui/Button';
-import { errorMessage, notify } from '../../ui/dialogs';
+import { confirm, errorMessage, notify } from '../../ui/dialogs';
 import { Badge, Card, goBack, Header, KeyValue, Notice, Screen, SectionTitle } from '../../ui/Layout';
 import { font, space } from '../../ui/theme';
 
@@ -26,18 +26,33 @@ export function InvoiceDetail({ invoice }: { invoice: Invoice }) {
     }
   };
 
+  const reopen = async () => {
+    const ok = await confirm({
+      title: 'Rechnung bearbeiten?',
+      message: `${invoice.number ?? 'Die Rechnung'} wird wieder zum Entwurf. Nummer und Rechnungsdatum bleiben gleich. Stelle sie danach erneut aus.`,
+      confirmLabel: 'Bearbeiten',
+    });
+    if (!ok) return;
+    try {
+      await actions.reopen(invoice.id);
+    } catch (error) {
+      notify('Bearbeiten nicht möglich', errorMessage(error));
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Header title={invoice.number ?? 'Rechnung'} subtitle={invoice.issuedAt ? `Ausgestellt am ${formatDate(invoice.issuedAt)}` : undefined} onBack={() => goBack('/')} />
       <Screen
         footer={
           <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Button label="Bearbeiten" icon="create-outline" variant="secondary" onPress={() => void reopen()} style={{ flex: 1 }} />
             <Button label="Kopie" icon="copy-outline" variant="secondary" onPress={() => void duplicate()} style={{ flex: 1 }} />
-            <Button label="PDF ansehen & teilen" icon="document-text" onPress={() => router.push({ pathname: '/invoice/[id]/preview', params: { id: invoice.id } })} style={{ flex: 2 }} />
+            <Button label="PDF ansehen & teilen" icon="document-text" onPress={() => router.push({ pathname: '/invoice/[id]/preview', params: { id: invoice.id } })} style={{ flex: 1.6 }} />
           </View>
         }
       >
-        <Notice tone="teal">Diese Rechnung ist ausgestellt und kann nicht mehr geändert werden. Mit „Kopie“ startest du einen neuen Entwurf mit denselben Positionen.</Notice>
+        <Notice tone="teal">Diese Rechnung ist ausgestellt und auf dem Gerät gespeichert. „Bearbeiten“ öffnet sie für eine Korrektur (gleiche Nummer), „Kopie“ startet einen neuen Entwurf mit denselben Positionen.</Notice>
 
         <Card>
           <Badge label="Ausgestellt" tone="success" icon="checkmark-circle" />

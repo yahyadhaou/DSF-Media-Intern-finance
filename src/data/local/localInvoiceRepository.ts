@@ -25,11 +25,12 @@ export const localInvoiceRepository: InvoiceRepository = {
       const existing = all.find((entry) => entry.id === invoice.id);
       if (existing?.status === 'issued') throw new Error(LOCKED_MESSAGE);
 
+      // A reopened invoice keeps the number and date it was issued with.
       const saved: Invoice = {
         ...invoice,
         status: 'draft',
-        number: null,
-        issuedAt: null,
+        number: existing?.number ?? null,
+        issuedAt: existing?.issuedAt ?? null,
         updatedAt: new Date().toISOString(),
       };
       await writeInvoices([...all.filter((entry) => entry.id !== invoice.id), saved]);
@@ -40,8 +41,11 @@ export const localInvoiceRepository: InvoiceRepository = {
   delete(id) {
     return exclusive(async () => {
       const all = await readInvoices();
-      if (all.find((entry) => entry.id === id)?.status === 'issued') throw new Error(LOCKED_MESSAGE);
-      await writeInvoices(all.filter((entry) => entry.id !== id));
+      const entry = all.find((invoice) => invoice.id === id);
+      if (entry?.status === 'issued') throw new Error(LOCKED_MESSAGE);
+      // Deleting would leave a gap in the invoice numbers.
+      if (entry?.number) throw new Error(`${entry.number} hat schon eine Rechnungsnummer und kann nicht gelöscht werden.`);
+      await writeInvoices(all.filter((invoice) => invoice.id !== id));
     });
   },
 
@@ -51,6 +55,13 @@ export const localInvoiceRepository: InvoiceRepository = {
       const invoice = all.find((entry) => entry.id === id);
       if (!invoice) throw new Error('Rechnung nicht gefunden.');
       if (invoice.status === 'issued') throw new Error(LOCKED_MESSAGE);
+
+      // Reissuing a corrected invoice: same number, same date, no new counter value.
+      if (invoice.number) {
+        const reissued: Invoice = { ...invoice, status: 'issued', issuedAt: invoice.issuedAt ?? todayIso(), updatedAt: new Date().toISOString() };
+        await writeInvoices(all.map((entry) => (entry.id === id ? reissued : entry)));
+        return reissued;
+      }
 
       const year = new Date().getFullYear();
       const counterKey = `invoice-${year}`;
@@ -68,6 +79,17 @@ export const localInvoiceRepository: InvoiceRepository = {
       await writeCounters({ ...counters, [counterKey]: sequence });
       await writeInvoices(all.map((entry) => (entry.id === id ? issued : entry)));
       return issued;
+    });
+  },
+
+  reopen(id) {
+    return exclusive(async () => {
+      const all = await readInvoices();
+      const invoice = all.find((entry) => entry.id === id);
+      if (!invoice) throw new Error('Rechnung nicht gefunden.');
+      const reopened: Invoice = { ...invoice, status: 'draft', updatedAt: new Date().toISOString() };
+      await writeInvoices(all.map((entry) => (entry.id === id ? reopened : entry)));
+      return reopened;
     });
   },
 };

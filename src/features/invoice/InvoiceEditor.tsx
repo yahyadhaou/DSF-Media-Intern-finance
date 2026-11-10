@@ -89,11 +89,11 @@ export function InvoiceEditor({ initial, company, catalog }: { initial: Invoice;
   };
 
   const issue = async () => {
-    const ok = await confirm({
-      title: 'Rechnung ausstellen?',
-      message: 'Die Rechnung bekommt jetzt ihre Nummer und kann danach nicht mehr geändert werden.',
-      confirmLabel: 'Ausstellen',
-    });
+    const ok = await confirm(
+      invoice.number
+        ? { title: 'Rechnung erneut ausstellen?', message: `Die Korrektur wird gespeichert. Nummer ${invoice.number} und das Rechnungsdatum bleiben gleich.`, confirmLabel: 'Ausstellen' }
+        : { title: 'Rechnung ausstellen?', message: 'Die Rechnung bekommt jetzt ihre Nummer und wird gesperrt. Über „Bearbeiten“ kannst du sie später korrigieren.', confirmLabel: 'Ausstellen' },
+    );
     if (!ok) return;
     setIssuing(true);
     try {
@@ -112,7 +112,7 @@ export function InvoiceEditor({ initial, company, catalog }: { initial: Invoice;
   return (
     <View style={styles.fill}>
       <Header
-        title={startedNew ? 'Neue Rechnung' : 'Entwurf'}
+        title={invoice.number ? `${invoice.number} · Korrektur` : startedNew ? 'Neue Rechnung' : 'Entwurf'}
         subtitle={SAVE_TEXT[state]}
         onBack={() => goBack('/')}
         right={

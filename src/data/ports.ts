@@ -12,8 +12,10 @@ export interface InvoiceRepository {
   save(invoice: Invoice): Promise<Invoice>;
   /** Drafts only. */
   delete(id: string): Promise<void>;
-  /** Locks the invoice and assigns the next sequential number. */
+  /** Locks the invoice and assigns the next sequential number (a reopened invoice keeps its number). */
   issue(id: string): Promise<Invoice>;
+  /** Unlocks an issued invoice for corrections. Number and date stay; issue it again when done. */
+  reopen(id: string): Promise<Invoice>;
 }
 
 export interface TravelRepository {
@@ -25,6 +27,8 @@ export interface TravelRepository {
   delete(id: string): Promise<void>;
   /** Locks the statement. */
   finalize(id: string): Promise<TravelStatement>;
+  /** Unlocks a finalized statement so it can be changed again. */
+  reopen(id: string): Promise<TravelStatement>;
 }
 
 export interface CatalogRepository {

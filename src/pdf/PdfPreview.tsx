@@ -14,6 +14,11 @@ export function PdfPreview({ html }: { html: string }) {
         source={{ html }}
         style={styles.fill}
         scalesPageToFit
+        // Android: ignore the system font size (Samsung "Schriftgröße"), otherwise the preview
+        // text grows and table headers like „HIN- & RÜCK (KM)“ wrap differently than in the PDF.
+        textZoom={100}
+        setBuiltInZoomControls
+        setDisplayZoomControls={false}
         bounces
         showsVerticalScrollIndicator
         startInLoadingState

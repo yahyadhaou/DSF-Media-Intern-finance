@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useTravelActions, useTravelList } from '../../data/hooks';
 import { computeTravelTotals, formatEur, formatKm, formatTravelDate, travelPeriod, type TravelStatement } from '../../domain/travel';
 import { IconButton } from '../../ui/Button';
@@ -36,6 +36,8 @@ function TravelCard({ statement, onDelete }: { statement: TravelStatement; onDel
 export default function TravelListScreen() {
   const { data, isLoading } = useTravelList();
   const { remove } = useTravelActions();
+  // Tablets: two cards side by side.
+  const columns = useWindowDimensions().width >= 720 ? 2 : 1;
 
   const askDelete = async (statement: TravelStatement) => {
     const ok = await confirm({ title: 'Entwurf löschen?', message: 'Die Abrechnung wird endgültig gelöscht.', confirmLabel: 'Löschen', destructive: true });
@@ -54,10 +56,17 @@ export default function TravelListScreen() {
         <ActivityIndicator style={{ marginTop: 48 }} color={colors.tealDark} />
       ) : (
         <FlatList
+          key={columns}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.row : undefined}
           data={data}
           keyExtractor={(statement) => statement.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => <TravelCard statement={item} onDelete={() => void askDelete(item)} />}
+          renderItem={({ item }) => (
+            <View style={[styles.cell, columns > 1 && styles.half]}>
+              <TravelCard statement={item} onDelete={() => void askDelete(item)} />
+            </View>
+          )}
           ListEmptyComponent={<EmptyState icon="car-outline" title="Noch keine Abrechnung" text="Erfasse deine Fahrten zu den Aufträgen und teile die Kilometerabrechnung als PDF." />}
         />
       )}
@@ -68,6 +77,10 @@ export default function TravelListScreen() {
 
 const styles = StyleSheet.create({
   list: { padding: space.lg, paddingTop: space.sm, gap: space.md, paddingBottom: 110 },
+  row: { gap: space.md },
+  cell: { flex: 1 },
+  // Keeps a single card in the last row at half width.
+  half: { maxWidth: '49%' },
   card: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   right: { alignItems: 'flex-end', gap: 2 },
   amount: { fontSize: 17, fontWeight: '800', color: colors.navy, fontVariant: ['tabular-nums'] },

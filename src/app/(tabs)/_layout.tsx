@@ -9,7 +9,7 @@ const tab = (title: string, active: IconName, inactive: IconName) => ({
   tabBarIcon: ({ focused, color }: { focused: boolean; color: ColorValue }) => <Icon name={focused ? active : inactive} size={24} color={color} />,
 });
 
-/** Four tabs, always visible: the whole app is one tap away. */
+/** Five tabs, always visible: the whole app is one tap away. */
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   return (
@@ -30,6 +30,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={tab('Rechnungen', 'document-text', 'document-text-outline')} />
       <Tabs.Screen name="travel" options={tab('Fahrten', 'car', 'car-outline')} />
+      <Tabs.Screen name="stats" options={tab('Statistik', 'stats-chart', 'stats-chart-outline')} />
       <Tabs.Screen name="prices" options={tab('Preise', 'pricetags', 'pricetags-outline')} />
       <Tabs.Screen name="settings" options={tab('Einstellungen', 'settings', 'settings-outline')} />
     </Tabs>

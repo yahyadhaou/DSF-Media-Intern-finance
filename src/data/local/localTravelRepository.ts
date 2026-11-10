@@ -43,4 +43,15 @@ export const localTravelRepository: TravelRepository = {
       return finalized;
     });
   },
+
+  reopen(id) {
+    return exclusive(async () => {
+      const all = await readTravel();
+      const statement = all.find((entry) => entry.id === id);
+      if (!statement) throw new Error('Fahrtkostenabrechnung nicht gefunden.');
+      const reopened: TravelStatement = { ...statement, status: 'draft', updatedAt: new Date().toISOString() };
+      await writeTravel(all.map((entry) => (entry.id === id ? reopened : entry)));
+      return reopened;
+    });
+  },
 };

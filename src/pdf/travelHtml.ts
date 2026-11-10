@@ -56,10 +56,12 @@ body{color:${C.navy}}
 .table{position:absolute;left:${MARGIN}px;width:${CONTENT_WIDTH}px}
 .head{display:flex;height:${HEADER_HEIGHT}px;background:${C.navy};align-items:center}
 .head>div{font-weight:700;font-size:8.5px;color:#fff;padding:0 4px;line-height:1.2;hyphens:none}
+.table:not(.compact) .head>div{white-space:nowrap}
+.right{text-align:right}
 .row{position:relative;display:flex;align-items:center;min-height:16.4px}
 .row::after{content:'';position:absolute;left:0;right:0;bottom:0;height:.6px;background:${C.border}}
 .cell{font-size:9.5px;padding:3.1px 4px .7px;line-height:1.263;hyphens:none;overflow-wrap:normal;word-break:normal;min-width:0}
-.cell.grow,.head>div.grow{flex:1 1 0;padding-right:8px}
+.cell.grow,.head>div.grow{flex:1 1 0;padding-right:4px}
 .compact .head>div{font-size:7.5px}
 .compact .cell{font-size:8.5px;line-height:1.3}
 .totalRow{display:flex;height:16.4px;background:${C.totalTint}}
@@ -74,6 +76,8 @@ interface Column {
   label: string;
   /** Fixed width in pt; `undefined` takes the remaining space. */
   width?: number;
+  /** Figures are right-aligned (header and cells), as in the reference PDF. */
+  right?: boolean;
 }
 
 function columns(statement: TravelStatement): { list: Column[]; compact: boolean } {
@@ -85,19 +89,19 @@ function columns(statement: TravelStatement): { list: Column[]; compact: boolean
         { key: 'address', label: 'ZIELADRESSE' },
         ...(statement.showClient ? [{ key: 'client' as const, label: 'KUNDE', width: 70 }] : []),
         { key: 'order', label: 'AUFTRAGS-NR.', width: 66 },
-        ...(statement.showDuration ? [{ key: 'duration' as const, label: 'DAUER', width: 38 }] : []),
-        { key: 'single', label: 'EINFACH\n(KM)', width: 44 },
-        { key: 'round', label: 'HIN & ZURÜCK\n(KM)', width: 56 },
-        { key: 'amount', label: 'BETRAG\n(EUR)', width: 44 },
+        ...(statement.showDuration ? [{ key: 'duration' as const, label: 'DAUER', width: 38, right: true }] : []),
+        { key: 'single', label: 'EINFACH\n(KM)', width: 44, right: true },
+        { key: 'round', label: 'HIN & ZURÜCK\n(KM)', width: 56, right: true },
+        { key: 'amount', label: 'BETRAG\n(EUR)', width: 44, right: true },
       ]
     : [
         { key: 'nr', label: 'NR.', width: 25.5 },
         { key: 'date', label: 'DATUM', width: 56.7 },
         { key: 'address', label: 'ZIELADRESSE' },
         { key: 'order', label: 'AUFTRAGS-NR.', width: 90.7 },
-        { key: 'single', label: 'EINFACH\n(KM)', width: 48.2 },
-        { key: 'round', label: 'HIN- & RÜCK\n(KM)', width: 62.3 },
-        { key: 'amount', label: 'BETRAG\n(EUR)', width: 51.1 },
+        { key: 'single', label: 'EINFACH\n(KM)', width: 48.2, right: true },
+        { key: 'round', label: 'HIN- & RÜCK\n(KM)', width: 62.3, right: true },
+        { key: 'amount', label: 'BETRAG\n(EUR)', width: 51.1, right: true },
       ];
   return { list, compact };
 }
@@ -134,8 +138,8 @@ function estimateRowHeight(trip: TravelTrip, index: number, ratePerKm: number, l
   const fontSize = compact ? 8.5 : 9.5;
   const lineHeight = compact ? 8.5 * 1.3 : 9.5 * 1.263;
   const lines = list.reduce((most, column) => {
-    // Cell padding is 4 pt left and right; the growing (address) column keeps 8 pt on the right.
-    const inner = column.width ? column.width - 8 : CONTENT_WIDTH - fixed - 12;
+    // Cell padding is 4 pt left and right, also on the growing (address) column.
+    const inner = column.width ? column.width - 8 : CONTENT_WIDTH - fixed - 8;
     return Math.max(most, countLines(cellValue(column, trip, index, ratePerKm), fontSize, inner));
   }, 1);
   return Math.max(MIN_ROW_HEIGHT, lines * lineHeight + 3.1 + 0.7);
@@ -169,7 +173,7 @@ function paginate(heights: number[]): number[][] {
 }
 
 const widthStyle = (column: Column) => (column.width ? `width:${column.width}px;flex:none` : '');
-const cellClass = (column: Column) => (column.width ? 'cell' : 'cell grow');
+const cellClass = (column: Column) => (column.width ? 'cell' : 'cell grow') + (column.right ? ' right' : '');
 
 const LOGO = `<div class="abs" style="left:${MARGIN}px;top:52px"><svg width="34" height="29" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
 <rect x="0" y="14" width="6.5" height="10" rx="1.2" fill="${C.logoDark}"/>
@@ -193,7 +197,7 @@ export function buildTravelHtml(statement: TravelStatement, company: CompanySett
 
   const head = () =>
     `<div class="head">${list
-      .map((column) => `<div class="${column.width ? '' : 'grow'}" style="${widthStyle(column)}">${escLines(column.label)}</div>`)
+      .map((column) => `<div class="${column.width ? '' : 'grow'}${column.right ? ' right' : ''}" style="${widthStyle(column)}">${escLines(column.label)}</div>`)
       .join('')}</div>`;
 
   const html = pages.map((rowIndexes, pageIndex) => {
